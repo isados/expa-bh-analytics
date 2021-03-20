@@ -7,11 +7,15 @@ import urllib
 import pygsheets
 import numpy as np
 import pandas as pd
+from base64 import b64decode
 
 
 if __name__ == "__main__":
     # Credentials from service account file for Google Sheets
-    secretpath = "creds_google/service_account.json"
+    secretpath = "secret.json"
+    with open(secretpath, 'wb') as f:
+        f.write(b64decode(os.environ['GOOGLE_CREDS']))
+
     gc = pygsheets.authorize(service_file=secretpath)
 
     URI = 'https://gis-api.aiesec.org/graphql'
