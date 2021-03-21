@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 /creds_google
+base64encoded_creds
