@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     #  Flatten dictionary and compress keys
     results = pd.json_normalize(results, sep='_')
-    results.replace([np.NaN], '-', inplace=True)
+    results.replace([np.NaN], '', inplace=True)
 
     results = json.loads(response.content)
 
