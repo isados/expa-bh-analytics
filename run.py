@@ -10,6 +10,11 @@ import pandas as pd
 from base64 import b64decode
 
 
+class InvalidStartDate(Exception):
+    """Raised when the Start Date isn't valid or missing"""
+    pass
+
+
 if __name__ == "__main__":
     # Credentials from service account file for Google Sheets
     secretpath = "secret.json"
@@ -21,8 +26,22 @@ if __name__ == "__main__":
     URI = 'https://gis-api.aiesec.org/graphql'
     ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
 
-    # ORIGINAL_QUERY = '{allOpportunityApplication(filters: {created_at: {from:"2021-01-01", to:"2021-03-20"}}){data{id status created_at date_matched date_approved date_realized experience_start_date experience_end_date date_approval_broken nps_response_completed_at updated_at person{id full_name home_mc{id name}home_lc{id name}}host_lc{id name}home_mc{id name}opportunity{id created_at title available_openings duration sub_product{name}programme{id short_name_display}}standards{option}}}}'
-    QUERY = '{allOpportunityApplication(filters: {created_at: {from:"2021-01-01", to:"2021-03-20"}}){data{id status created_at date_matched date_approved date_realized experience_start_date experience_end_date date_approval_broken nps_response_completed_at updated_at person{id full_name home_mc{name}home_lc{name}}host_lc{name}home_mc{name}opportunity{id created_at title duration sub_product{name}programme{short_name_display}}standards{option}}}}'
+    START_DATE = os.environ['START_DATE']
+    END_DATE = os.environ['END_DATE']
+
+    if START_DATE in ["", None]:
+        raise InvalidStartDate
+
+    if END_DATE is None:
+        END_DATE = ""
+    DATE_RANGE = 'created_at: {from:"START_DATE", to:"END_DATE"}'
+
+    DATE_RANGE = DATE_RANGE.replace("START_DATE",
+                                    START_DATE).replace("END_DATE", END_DATE)
+
+
+    QUERY = '{allOpportunityApplication(filters: {DATE_RANGE}){data{id status created_at date_matched date_approved date_realized experience_start_date experience_end_date date_approval_broken nps_response_completed_at updated_at person{id full_name home_mc{name}home_lc{name}}host_lc{name}home_mc{name}opportunity{id created_at title duration sub_product{name}programme{short_name_display}}standards{option}}}}'
+    QUERY = QUERY.replace('DATE_RANGE', DATE_RANGE)
 
     url = f"{URI}?query={QUERY}&access_token={ACCESS_TOKEN}"
 
@@ -45,15 +64,15 @@ if __name__ == "__main__":
 
     results = json.loads(response.content)
 
-    # Reduce the dict by 3
+    # Reduce the dict by 3 Levels
     results = results['data']['allOpportunityApplication']['data']
 
     #  Flatten dictionary and compress keys
     results = pd.json_normalize(results, sep='_')
     results.replace([np.NaN], '-', inplace=True)
 
-    SPREADSHEET_ID = "1MQOyYpuJ4zF5xyqjVtAnrTrG3In9lxWl9L3yXiTeYiw"
-    SHEET_NAME = "HEROKU"
+    SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
+    SHEET_NAME = os.environ["SHEET_NAME"]
 
     workbook = gc.open_by_key(SPREADSHEET_ID)
     worksheet = workbook.worksheet_by_title(SHEET_NAME)
