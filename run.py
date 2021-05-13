@@ -7,7 +7,7 @@ import urllib
 import pygsheets
 import numpy as np
 import pandas as pd
-from base64 import b64decode
+from utilities import write_base64str_obj_to_file
 
 
 class InvalidStartDate(Exception):
@@ -18,8 +18,7 @@ class InvalidStartDate(Exception):
 if __name__ == "__main__":
     # Credentials from service account file for Google Sheets
     secretpath = "secret.json"
-    with open(secretpath, 'wb') as f:
-        f.write(b64decode(os.environ['GOOGLE_CREDS']))
+    write_base64str_obj_to_file(os.environ['GOOGLE_CREDS'], secretpath)
 
     gc = pygsheets.authorize(service_file=secretpath)
 
