@@ -2,12 +2,18 @@
 
 import os
 import json
+import tempfile
 import requests
 import urllib
 import pygsheets
 import numpy as np
 import pandas as pd
-from base64 import b64decode
+from utilities import write_base64str_obj_to_file
+
+
+class InvalidStartDate(Exception):
+    """Raised when the Start Date isn't valid or missing"""
+    pass
 
 
 class InvalidStartDate(Exception):
@@ -17,11 +23,16 @@ class InvalidStartDate(Exception):
 
 if __name__ == "__main__":
     # Credentials from service account file for Google Sheets
-    secretpath = "secret.json"
-    with open(secretpath, 'wb') as f:
-        f.write(b64decode(os.environ['GOOGLE_CREDS']))
 
-    gc = pygsheets.authorize(service_file=secretpath)
+    print("Creating temporary file for service account credentials...")
+
+    temp = tempfile.NamedTemporaryFile()
+    try:
+        write_base64str_obj_to_file(os.environ['GOOGLE_CREDS'], temp.name)
+    finally:
+        gc = pygsheets.authorize(service_file=temp.name)
+        temp.close() #5
+
 
     URI = 'https://gis-api.aiesec.org/graphql'
     ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
@@ -60,7 +71,7 @@ if __name__ == "__main__":
 
     #  Flatten dictionary and compress keys
     results = pd.json_normalize(results, sep='_')
-    results.replace([np.NaN], '-', inplace=True)
+    results.replace([np.NaN], '', inplace=True)
 
     results = json.loads(response.content)
 
@@ -69,7 +80,7 @@ if __name__ == "__main__":
 
     #  Flatten dictionary and compress keys
     results = pd.json_normalize(results, sep='_')
-    results.replace([np.NaN], '-', inplace=True)
+    results.replace([np.NaN, "", "-"], '', inplace=True)
 
     SPREADSHEET_ID = os.environ["SPREADSHEET_ID"]
     SHEET_NAME = os.environ["SHEET_NAME"]
