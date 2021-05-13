@@ -2,6 +2,7 @@
 
 import os
 import json
+import tempfile
 import requests
 import urllib
 import pygsheets
@@ -17,10 +18,16 @@ class InvalidStartDate(Exception):
 
 if __name__ == "__main__":
     # Credentials from service account file for Google Sheets
-    secretpath = "secret.json"
-    write_base64str_obj_to_file(os.environ['GOOGLE_CREDS'], secretpath)
 
-    gc = pygsheets.authorize(service_file=secretpath)
+    print("Creating temporary file for service account credentials...")
+
+    temp = tempfile.NamedTemporaryFile()
+    try:
+        write_base64str_obj_to_file(os.environ['GOOGLE_CREDS'], temp.name)
+    finally:
+        gc = pygsheets.authorize(service_file=temp.name)
+        temp.close() #5
+
 
     URI = 'https://gis-api.aiesec.org/graphql'
     ACCESS_TOKEN = os.environ['ACCESS_TOKEN']
