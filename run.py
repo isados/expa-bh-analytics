@@ -41,10 +41,9 @@ if __name__ == "__main__":
 
     if END_DATE is None:
         END_DATE = ""
-    DATE_RANGE = Template('created_at: {from:"$start", to:"$end"}').substitute(start=START_DATE, end=END_DATE)
 
-    QUERY = '{allOpportunityApplication(filters: {DATE_RANGE}){data{id status created_at date_matched date_approved date_realized experience_start_date experience_end_date date_approval_broken nps_response_completed_at updated_at person{id full_name home_mc{name}home_lc{name}}host_lc{name}home_mc{name}opportunity{id created_at title duration sub_product{name}programme{short_name_display}}standards{option}}}}'
-    QUERY = QUERY.replace('DATE_RANGE', DATE_RANGE)
+    QUERY = Template('{allOpportunityApplication(filters: {created_at: {from:"$start", to:"$end"}}){data{id status created_at date_matched date_approved date_realized experience_start_date experience_end_date date_approval_broken nps_response_completed_at updated_at person{id full_name home_mc{name}home_lc{name}}host_lc{name}home_mc{name}opportunity{id created_at title duration sub_product{name}programme{short_name_display}}standards{option}}}}')
+    QUERY = QUERY.substitute(start=START_DATE, end=END_DATE)
 
     url = f"{URI}?query={QUERY}&access_token={ACCESS_TOKEN}"
 
