@@ -128,5 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-/creds_google
-base64encoded_creds
+/creds
