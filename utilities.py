@@ -15,3 +15,8 @@ def write_base64str_obj_to_file(text: str, filename: str) -> None:
     except:
         print("Error in conversion")
     return None
+
+def read_text_fromfile(path: str) -> str:
+    with open(path, "r") as file:
+        text = file.read()
+    return text
