@@ -1,3 +1,4 @@
+import yaml
 from base64 import b64encode, b64decode
 
 def convertfile_to_base64str(filename: str) -> str :
@@ -20,3 +21,11 @@ def read_text_fromfile(path: str) -> str:
     with open(path, "r") as file:
         text = file.read()
     return text
+
+def read_env_variables(config_file: str="config.yaml") -> dict:
+    try:
+        with open('config.yaml', 'r', newline='') as f:
+            return yaml.load(f, Loader=yaml.Loader)
+    except yaml.YAMLError as ymlexcp:
+        print(ymlexcp)
+        return None
