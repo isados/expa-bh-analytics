@@ -22,7 +22,7 @@ def read_text_fromfile(path: str) -> str:
         text = file.read()
     return text
 
-def read_env_variables(config_file: str="config.yaml") -> dict:
+def get_yaml_config(config_file: str="config.yaml") -> dict:
     try:
         with open('config.yaml', 'r', newline='') as f:
             return yaml.load(f, Loader=yaml.Loader)
