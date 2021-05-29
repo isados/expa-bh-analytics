@@ -6,7 +6,9 @@ GOOGLE_CREDS: ewogIxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 # Google Sheets Vars
 SPREADSHEET_ID: 1MQOxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SHEET_NAME: HEROKU
+## Sheet names
+APPLICATIONS_SHEET: Apps Sheet
+PERF_SHEET: Performance Analytics
 
 # GraphQL Vars
 START_DATE: "YYYY-MM-DD"
