@@ -22,9 +22,9 @@ def read_text_fromfile(path: str) -> str:
         text = file.read()
     return text
 
-def get_yaml_config(config_file: str="config.yaml") -> dict:
+def get_config(config_file: str="config.yml") -> dict:
     try:
-        with open('config.yaml', 'r', newline='') as f:
+        with open(config_file, 'r', newline='') as f:
             return yaml.load(f, Loader=yaml.Loader)
     except yaml.YAMLError as ymlexcp:
         print(ymlexcp)

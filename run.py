@@ -5,6 +5,7 @@ import tempfile
 import pygsheets
 import pandas as pd
 import asyncio
+from functools import partial
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from utilities import write_base64str_obj_to_file
@@ -169,11 +170,17 @@ def main():
         gc = pygsheets.authorize(service_file=temp.name)
         temp.close()
 
-    print("Uploading to Google Sheets...")
+    print("Writing to Google Sheets...")
     workbook = gc.open_by_key(os.environ["SPREADSHEET_ID"])
-    perf_worksheet = workbook.worksheet_by_title(os.environ["SHEET_NAME"])
 
-    perf_worksheet.set_dataframe(perf_analysis_df, start='A1', copy_head=True)
+    perf_worksheet = workbook.worksheet_by_title(os.environ["PerformanceSheet"])
+    applications_worksheet = workbook.worksheet_by_title(os.environ["ApplicationsSheet"])
+    
+    # Create handy function to write to sheets
+    set_worksheet_todf = partial(pygsheets.Worksheet.set_dataframe, start="A1", copy_head=True)
+
+    set_worksheet_todf(perf_worksheet, perf_analysis_df)
+    set_worksheet_todf(applications_worksheet, results)
     print("Done!")
 
 if __name__ == "__main__":
