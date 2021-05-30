@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from pandas.io.pytables import performance_doc
 import pygsheets
 import pandas as pd
 import asyncio
@@ -87,15 +88,14 @@ def main():
             return results
 
     print("Executing query off of EXPA ...")
-    results = asyncio.run(getData()) 
-
+    apps_data = asyncio.run(getData()) 
 
     print("Started preprocessing...")
     # Reduce the dict by 3 Levels
-    results = results['allOpportunityApplication']['data']
+    apps_data = apps_data['allOpportunityApplication']['data']
 
     #  Flatten dictionary and compress keys
-    results = pd.json_normalize(results, sep='_')
+    apps_df = pd.json_normalize(apps_data, sep='_')
 
     # Create new columns for Easy Reading and Indices
     # * LC
@@ -105,26 +105,22 @@ def main():
     # * Partner_LC
 
     # Create new multi-indices for grouping
-    new_cols = ['dept_prefix', 'lc', 'partner_mc', 'partner_lc']
+    new_fields = ['department', 'lc', 'partner_mc', 'partner_lc']
 
     def generate_new_fields(row):
-
         if row['person_home_mc_name'] == 'Bahrain':
-            values = ['o', row['person_home_lc_name'],
+            values = ['o' + row['opportunity_programme_short_name_display'], row['person_home_lc_name'],
                     row['host_mc_name'], row['host_lc_name']]
         else:
-            values = ['i', row['host_lc_name'],
+            values = ['i' + row['opportunity_programme_short_name_display'], row['host_lc_name'],
                     row['person_home_mc_name'], row['person_home_lc_name']]
-
-        return dict(zip(new_cols, values))
+        return dict(zip(new_fields, values))
 
     print("Generating new fields and tables ...")
-    results[new_cols] = results.apply(lambda row: generate_new_fields(row), axis=1, result_type='expand')
+    apps_df[new_fields] = apps_df.apply(lambda row: generate_new_fields(row), axis=1, result_type='expand')
 
     # Create a new field 'department' with incoming and outgoing labels as prefix
-    results['department'] = results.dept_prefix + results.opportunity_programme_short_name_display
-    results.drop('opportunity_programme_short_name_display', inplace=True, axis=1)
-    results['department']
+    apps_df.drop('opportunity_programme_short_name_display', inplace=True, axis=1)
 
     """
     Produce Performance Analytics DataFrame
@@ -134,28 +130,29 @@ def main():
 
     date_cols = ['created_at', 'date_matched', 'date_approved', 'date_realized', 'updated_at']
     multi_indices = ['lc', 'department', 'partner_mc', 'partner_lc']
-    counting_by = ['id', 'person_id']
+    aggregration_fields = ['id', 'person_id']
 
     # Generate table with these columns only
-    perf_table = results[counting_by + date_cols + multi_indices].copy()
+    perf_table = apps_df[aggregration_fields + date_cols + multi_indices].copy()
 
     # Ensure that dates are uniform and shortened
-    perf_table.loc[:,date_cols] = results[date_cols].applymap(lambda x: x[:-10], na_action='ignore')
+    perf_table.loc[:,date_cols] = apps_df[date_cols].applymap(lambda x: x[:-10], na_action='ignore')
 
-    def splitup_date_field(table: pd.DataFrame, remaining_fields: list, sel_date_col: str, metric_name: str):
-        table = table[[sel_date_col, *remaining_fields, *counting_by]]
-        _ = table.sort_values([sel_date_col, *remaining_fields])
-        _.rename(columns={sel_date_col: "date", 
+    def get_timeseries_formetric(table: pd.DataFrame, other_fields: list, selected_date_col: str, metric_name: str) -> pd.DataFrame:
+        table = table[[selected_date_col, *other_fields, *aggregration_fields]]
+        _ = table.sort_values([selected_date_col, *other_fields])
+        _.rename(columns={selected_date_col: "date", 
                         "id": metric_name+"~APP", 
                         "person_id": metric_name+"~PPL"}, inplace=True)
         
         
         return _.dropna(axis=0)
 
-    apps = splitup_date_field(perf_table, multi_indices, "created_at", "applications")
-    acc = splitup_date_field(perf_table, multi_indices, "date_matched", "accepted")
+    apps_per_day = get_timeseries_formetric(perf_table, multi_indices, "created_at", "applications")
+    accbyhost_per_day = get_timeseries_formetric(perf_table, multi_indices, "date_matched", "acceptedbyhost")
 
-    perf_analysis_df = pd.concat([apps, acc])
+    perf_analysis_df = pd.concat([apps_per_day, accbyhost_per_day])
+    perf_analysis_df.fillna("", inplace=True, axis=0)
 
     # ### Push it to Google Sheets
 
@@ -180,7 +177,7 @@ def main():
     set_worksheet_todf = partial(pygsheets.Worksheet.set_dataframe, start="A1", copy_head=True)
 
     set_worksheet_todf(perf_worksheet, perf_analysis_df)
-    set_worksheet_todf(applications_worksheet, results)
+    set_worksheet_todf(applications_worksheet, apps_df)
     print("Done!")
 
 if __name__ == "__main__":
