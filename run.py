@@ -99,7 +99,6 @@ def main():
 
     # Create new columns for Easy Reading and Indices
     # * LC
-    # * LC_ID
     # * Department
     # * Partner_MC
     # * Partner_LC
@@ -125,7 +124,7 @@ def main():
     apps_df[new_fields] = apps_df.apply(lambda row: generate_new_fields(row), axis=1, result_type='expand')
 
     # Create a new field 'department' with incoming and outgoing labels as prefix
-    cols_to_drop = ['opportunity_programme_short_name_display']
+    cols_to_drop = ['opportunity_programme_short_name_display', 'host_mc_name', 'host_lc_name', 'person_home_mc_name', 'person_home_lc_name']
     apps_df.drop(cols_to_drop, inplace=True, axis=1)
 
     """
