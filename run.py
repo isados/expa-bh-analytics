@@ -106,21 +106,27 @@ def main():
 
     # Create new multi-indices for grouping
     new_fields = ['department', 'lc', 'partner_mc', 'partner_lc']
-
     def generate_new_fields(row):
         if row['person_home_mc_name'] == 'Bahrain':
-            values = ['o' + row['opportunity_programme_short_name_display'], row['person_home_lc_name'],
-                    row['host_mc_name'], row['host_lc_name']]
+            values = ['o' + row['opportunity_programme_short_name_display'],
+                       row['person_home_lc_name'],
+                       row['host_mc_name'], 
+                       row['host_lc_name']
+                     ]
         else:
-            values = ['i' + row['opportunity_programme_short_name_display'], row['host_lc_name'],
-                    row['person_home_mc_name'], row['person_home_lc_name']]
+            values = ['i' + row['opportunity_programme_short_name_display'],
+                      row['host_lc_name'],
+                      row['person_home_mc_name'],
+                      row['person_home_lc_name']
+                     ]
         return dict(zip(new_fields, values))
 
     print("Generating new fields and tables ...")
     apps_df[new_fields] = apps_df.apply(lambda row: generate_new_fields(row), axis=1, result_type='expand')
 
     # Create a new field 'department' with incoming and outgoing labels as prefix
-    apps_df.drop('opportunity_programme_short_name_display', inplace=True, axis=1)
+    cols_to_drop = ['opportunity_programme_short_name_display']
+    apps_df.drop(cols_to_drop, inplace=True, axis=1)
 
     """
     Produce Performance Analytics DataFrame
