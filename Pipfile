@@ -9,6 +9,7 @@ pygsheets = "*"
 pytest = "*"
 pyaml = "*"
 gql = "==3.0.0a5"
+aiohttp = "*"
 
 [dev-packages]
 
