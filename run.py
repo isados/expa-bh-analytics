@@ -2,7 +2,6 @@
 
 import os
 import tempfile
-from pandas.io.pytables import performance_doc
 import pygsheets
 import pandas as pd
 import asyncio
