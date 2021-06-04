@@ -8,7 +8,7 @@ import asyncio
 from functools import partial
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
-from utilities import write_base64str_obj_to_file
+from utils import write_base64str_obj_to_file
 
 
 def main():
@@ -122,7 +122,6 @@ def main():
     print("Generating new fields and tables ...")
     apps_df[new_fields] = apps_df.apply(lambda row: generate_new_fields(row), axis=1, result_type='expand')
 
-    # Create a new field 'department' with incoming and outgoing labels as prefix
     cols_to_drop = ['opportunity_programme_short_name_display', 'host_mc_name', 'host_lc_name', 'person_home_mc_name', 'person_home_lc_name']
     apps_df.drop(cols_to_drop, inplace=True, axis=1)
 
