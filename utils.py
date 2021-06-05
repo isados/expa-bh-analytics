@@ -13,7 +13,7 @@ def write_base64str_obj_to_file(text: str, filename: str) -> None:
     try:
         with open(filename, 'wb') as file:
             file.write(b64decode(text))
-    except:
+    except FileExistsError:
         print("Error in conversion")
     return None
 
