@@ -6,8 +6,8 @@ def convertfile_to_base64str(filename: str) -> str :
         with open(filename, "rb") as file:
             content = file.read()
             return b64encode(content)
-    except:
-        print("Error reading file")
+    except FileNotFoundError as ec:
+        raise ec
 
 def write_base64str_obj_to_file(text: str, filename: str) -> None:
     try:
