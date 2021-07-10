@@ -100,12 +100,13 @@ def main():
     #  Flatten dictionary and compress keys
     apps_df = pd.json_normalize(apps_data, sep='_')
 
-    # Create new columns for Easy Reading and Indices
-    # * LC
-    # * Department
-    # * Partner_MC
-    # * Partner_LC
-
+    """
+    Create new columns for easy comprehension
+        * LC
+        * Department
+        * Partner_MC
+        * Partner_LC
+    """
     # Create new multi-indices for grouping
     new_fields = ['department', 'lc', 'partner_mc', 'partner_lc']
     def generate_new_fields(row):
