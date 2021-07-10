@@ -41,6 +41,10 @@ def main():
                     person {
                         id
                         full_name
+                        contact_detail {
+                            email
+                            phone
+                        }
                         home_mc {
                         name
                         }
