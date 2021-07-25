@@ -107,7 +107,7 @@ def main():
         * Partner_MC
         * Partner_LC
     """
-    # Create new multi-indices for grouping
+
     new_fields = ['department', 'lc', 'partner_mc', 'partner_lc']
     def generate_new_fields(row):
         if row['person_home_mc_name'] == 'Bahrain':
@@ -127,13 +127,13 @@ def main():
     print("Generating new fields and tables ...")
     apps_df[new_fields] = apps_df.apply(lambda row: generate_new_fields(row), axis=1, result_type='expand')
 
-    cols_to_drop = ['opportunity_programme_short_name_display', 'host_mc_name', 'host_lc_name', 'person_home_mc_name', 'person_home_lc_name']
-    apps_df.drop(cols_to_drop, inplace=True, axis=1)
+    pointless_cols = ['opportunity_programme_short_name_display', 'host_mc_name', 'host_lc_name', 'person_home_mc_name', 'person_home_lc_name']
+    apps_df.drop(pointless_cols, inplace=True, axis=1)
 
     """
-    Produce Performance Analytics DataFrame
+    Produce Performance Analytics Table
         * First convert dates from longform to YYYY-MM-DD
-        * Group by Date, LC, Dept, PartnerMC, PartnerLC, and the metrics like # of Applications, Accepted etc.. will be the aggregation
+        * Retain Date, LC, Dept, PartnerMC, PartnerLC, and the Status Column like # of Applications, Accepted etc.. will be the aggregation
     """
 
     date_cols = ['created_at', 'date_matched', 'date_approved', 'date_realized', 'updated_at']
@@ -149,18 +149,18 @@ def main():
     def get_timeseries_formetric(table: pd.DataFrame, other_fields: list, selected_date_col: str, metric_name: str) -> pd.DataFrame:
         table = table[[selected_date_col, *other_fields, *aggregration_fields]]
         _ = table.sort_values([selected_date_col, *other_fields])
+        _[metric_name] = 1
         _.rename(columns={selected_date_col: "date", 
-                        "id": metric_name+"~APP", 
-                        "person_id": metric_name+"~PPL"}, inplace=True)
-        
-        
+                        "id": "AppID", 
+                        "person_id": "PersonID"}, inplace=True)
         return _.dropna(axis=0)
 
-    apps_per_day = get_timeseries_formetric(perf_table, multi_indices, "created_at", "applications")
-    accbyhost_per_day = get_timeseries_formetric(perf_table, multi_indices, "date_matched", "acceptedbyhost")
+    apps_per_day = get_timeseries_formetric(perf_table, multi_indices, "created_at", "Applied")
+    acc_per_day = get_timeseries_formetric(perf_table, multi_indices, "date_matched", "Accepted")
+    apd_per_day = get_timeseries_formetric(perf_table, multi_indices, "date_approved", "Approved")
 
-    perf_analysis_df = pd.concat([apps_per_day, accbyhost_per_day])
-    perf_analysis_df.fillna("", inplace=True, axis=0)
+    perf_analysis_df = pd.concat([apps_per_day, acc_per_day, apd_per_day])
+    perf_analysis_df.fillna(0, inplace=True, axis=0)
 
     # ### Push it to Google Sheets
 
